@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Inicialização Firebase
+// 1. Inicialização Firebase
 try {
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -18,35 +18,36 @@ try {
             credential: admin.credential.cert(serviceAccount),
             databaseURL: process.env.FIREBASE_DB_URL
         });
-        console.log("[NEXUS] Firebase Conectado.");
+        console.log("[NEXUS] Firebase Conectado com sucesso.");
     }
-} catch (e) { console.error("Erro Firebase:", e.message); }
+} catch (e) {
+    console.error("[NEXUS] Erro Firebase:", e.message);
+}
 
 const db = admin.database();
 
-// Middleware de Segurança
-const securityCheck = (req, res, next) => {
-    const apiKey = req.headers['x-api-key'];
-    if (apiKey && apiKey === process.env.NEXUS_API_KEY) {
-        next();
-    } else {
-        console.log("[ALERTA] Tentativa de acesso sem token!");
-        res.status(403).json({ error: "ACESSO NEGADO" });
-    }
-};
-
-// ROTA QUE ESTAVA FALTANDO: Receber telemetria do Termux
-app.post('/api/telemetry/termux', securityCheck, async (req, res) => {
-    if (admin.apps.length) {
-        await db.ref('telemetry/termux_device').set({
-            ...req.body,
-            last_seen: admin.database.ServerValue.TIMESTAMP
-        });
-        console.log("[NEXUS] Telemetria Termux recebida e salva.");
-    }
-    res.json({ status: "SECURE_RECEIVED" });
+// 2. ROTA PRINCIPAL (Resolve o erro 'Cannot GET /')
+app.get('/', (req, res) => {
+    res.send('<h1>NEXUS SRE ENGINE</h1><p>Status: OPERACIONAL</p><p>Acesse o Dashboard no GitHub Pages.</p>');
 });
 
+// 3. Endpoint de Telemetria Termux (Seguro)
+app.post('/api/telemetry/termux', async (req, res) => {
+    const apiKey = req.headers['x-api-key'];
+    if (apiKey === process.env.NEXUS_API_KEY) {
+        if (admin.apps.length) {
+            await db.ref('telemetry/termux_device').set({
+                ...req.body,
+                last_seen: admin.database.ServerValue.TIMESTAMP
+            });
+        }
+        res.json({ status: "SECURE_RECEIVED" });
+    } else {
+        res.status(403).json({ error: "ACESSO NEGADO" });
+    }
+});
+
+// 4. Endpoint de Saúde do Sistema
 app.get('/api/health', async (req, res) => {
     const metrics = {
         status: "ONLINE",
@@ -54,10 +55,12 @@ app.get('/api/health', async (req, res) => {
         load: (os.loadavg()[0] / os.cpus().length).toFixed(2),
         timestamp: admin.database.ServerValue.TIMESTAMP
     };
-    if (admin.apps.length) { await db.ref('telemetry/current').set(metrics); }
+    if (admin.apps.length) {
+        await db.ref('telemetry/current').set(metrics);
+    }
     res.json(metrics);
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[NEXUS] Engine operacional na porta ${PORT}`);
+    console.log(`[NEXUS] Servidor ativo na porta ${PORT}`);
 });
