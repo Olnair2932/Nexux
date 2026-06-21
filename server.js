@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const admin = require('firebase-admin');
 const cors = require('cors');
-const os = require('os'); // Módulo para ler o sistema operacional
+const os = require('os');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Inicialização Firebase
 try {
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -17,37 +18,43 @@ try {
             credential: admin.credential.cert(serviceAccount),
             databaseURL: process.env.FIREBASE_DB_URL
         });
-        console.log("[NEXUS] SRE: Firebase Conectado.");
+        console.log("[NEXUS] Firebase Conectado.");
     }
-} catch (e) {
-    console.error("[NEXUS] Erro de Inicialização:", e.message);
-}
+} catch (e) { console.error("Erro Firebase:", e.message); }
 
 const db = admin.database();
 
-// Função para calcular carga real (0 a 1)
-const getSystemLoad = () => {
-    const load = os.loadavg()[0]; // Carga média de 1 minuto
-    return (load / os.cpus().length).toFixed(2);
+// Middleware de Segurança
+const securityCheck = (req, res, next) => {
+    const apiKey = req.headers['x-api-key'];
+    if (apiKey && apiKey === process.env.NEXUS_API_KEY) {
+        next();
+    } else {
+        console.log("[ALERTA] Tentativa de acesso sem token!");
+        res.status(403).json({ error: "ACESSO NEGADO" });
+    }
 };
+
+// ROTA QUE ESTAVA FALTANDO: Receber telemetria do Termux
+app.post('/api/telemetry/termux', securityCheck, async (req, res) => {
+    if (admin.apps.length) {
+        await db.ref('telemetry/termux_device').set({
+            ...req.body,
+            last_seen: admin.database.ServerValue.TIMESTAMP
+        });
+        console.log("[NEXUS] Telemetria Termux recebida e salva.");
+    }
+    res.json({ status: "SECURE_RECEIVED" });
+});
 
 app.get('/api/health', async (req, res) => {
     const metrics = {
         status: "ONLINE",
         uptime: process.uptime(),
-        load: getSystemLoad(),
-        memory: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2) + "MB",
+        load: (os.loadavg()[0] / os.cpus().length).toFixed(2),
         timestamp: admin.database.ServerValue.TIMESTAMP
     };
-
-    if (admin.apps.length) {
-        await db.ref('telemetry/current').set(metrics);
-        // Salva histórico apenas se a carga for alta (Economia de DB)
-        if (metrics.load > 0.8) {
-            await db.ref('telemetry/alerts').push({ ...metrics, msg: "HIGH_LOAD_DETECTED" });
-        }
-    }
-
+    if (admin.apps.length) { await db.ref('telemetry/current').set(metrics); }
     res.json(metrics);
 });
 
