@@ -14,37 +14,29 @@
         </header>
 
         <main class="grid">
-            <!-- CLOUD -->
             <div class="card">
                 <div class="card-header">NÓ DE PRODUÇÃO (RENDER)</div>
-                <div class="value" id="status-text">CONECTANDO...</div>
-                <p>Uptime: <span id="uptime-text">--</span></p>
+                <div class="value" id="status-text">--</div>
             </div>
 
-            <!-- MOBILE -->
             <div class="card">
                 <div class="card-header">NÓ MÓVEL (TERMUX)</div>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <span id="batt-icon" style="font-size: 3rem;">🔋</span>
-                    <div class="value" id="batt-percent">--%</div>
-                </div>
+                <div class="value" id="batt-percent">--%</div>
             </div>
 
-            <!-- HARDWARE -->
+            <!-- NOVO MÓDULO: EXECUTOR DE ARSENAL -->
+            <div class="card arsenal" style="border-color: #0088ff;">
+                <div class="card-header" style="color: #0088ff;">COMANDO DE ARSENAL</div>
+                <input type="text" id="script-input" placeholder="Ex: bateria.sh" style="width: 100%; padding: 10px; background: #000; border: 1px solid #0088ff; color: #0088ff; margin-top: 10px; box-sizing: border-box;">
+                <button id="run-script" style="width: 100%; margin-top: 10px; padding: 10px; background: #0088ff; color: #fff; font-weight: bold; cursor: pointer; border: none;">EXECUTAR NO TERMUX</button>
+            </div>
+
             <div class="card">
-                <div class="card-header">CONTROLE DE HARDWARE</div>
-                <p>Lanterna Remota:</p>
+                <div class="card-header">LANTERNA REMOTA</div>
                 <div style="display: flex; gap: 10px;">
-                    <button id="torch-on" style="flex: 1; padding: 15px; background: #ffcc00; color: #000; font-weight: bold; border: none; border-radius: 5px; cursor: pointer;">LIGAR</button>
-                    <button id="torch-off" style="flex: 1; padding: 15px; background: #333; color: #fff; font-weight: bold; border: none; border-radius: 5px; cursor: pointer;">DESLIGAR</button>
+                    <button id="torch-on" style="flex: 1; padding: 10px; background: #ffcc00; border: none;">LIGAR</button>
+                    <button id="torch-off" style="flex: 1; padding: 10px; background: #333; color: #fff; border: none;">DESLIGAR</button>
                 </div>
-            </div>
-
-            <!-- VOZ -->
-            <div class="card">
-                <div class="card-header">TRANSMISSÃO DE VOZ</div>
-                <input type="text" id="voice-input" placeholder="Mensagem..." style="width: 100%; padding: 10px; background: #000; border: 1px solid #00ff41; color: #00ff41; margin-top: 10px; box-sizing: border-box;">
-                <button id="send-voice" style="width: 100%; margin-top: 10px; padding: 10px; background: #00ff41; color: #000; font-weight: bold; cursor: pointer; border: none;">TRANSMITIR</button>
             </div>
         </main>
 
