@@ -66,3 +66,15 @@ header {
     font-size: 0.7rem;
     font-weight: bold;
 }
+/* Efeito de Alerta Crítico */
+.status-critical {
+    color: #ff0033 !important;
+    text-shadow: 0 0 10px #ff0033;
+    animation: pulse-red 0.5s infinite;
+}
+
+@keyframes pulse-red {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
