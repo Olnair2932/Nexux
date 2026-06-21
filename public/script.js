@@ -13,42 +13,26 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const logArea = document.getElementById('console');
 
-function addLog(msg) {
-    if(!logArea) return;
-    const div = document.createElement('div');
-    div.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
-    logArea.prepend(div);
-}
-
-// GATILHOS DE COMANDO
-const btnOn = document.getElementById('torch-on');
-const btnOff = document.getElementById('torch-off');
-const btnVoice = document.getElementById('send-voice');
-
-if(btnOn) btnOn.onclick = () => set(ref(db, 'commands/torch'), { active: true, timestamp: Date.now() });
-if(btnOff) btnOff.onclick = () => set(ref(db, 'commands/torch'), { active: false, timestamp: Date.now() });
-if(btnVoice) btnVoice.onclick = () => {
-    const txt = document.getElementById('voice-input').value;
-    if(txt) set(ref(db, 'commands/speech'), { message: txt, timestamp: Date.now() });
+// GATILHO DE ARSENAL
+document.getElementById('run-script').onclick = () => {
+    const scriptName = document.getElementById('script-input').value;
+    if(scriptName) {
+        set(ref(db, 'commands/arsenal'), {
+            script: scriptName,
+            timestamp: Date.now()
+        });
+        document.getElementById('script-input').value = "";
+        const entry = document.createElement('div');
+        entry.innerHTML = `[${new Date().toLocaleTimeString()}] Solicitado script: ${scriptName}`;
+        document.getElementById('console').prepend(entry);
+    }
 };
 
-// ESCUTADORES DE TELEMETRIA
-onValue(ref(db, 'telemetry/current'), (snapshot) => {
-    const data = snapshot.val();
-    if(data) {
-        if(document.getElementById('status-text')) document.getElementById('status-text').innerText = data.status;
-        if(document.getElementById('uptime-text')) document.getElementById('uptime-text').innerText = Math.floor(data.uptime) + "s";
-    }
+// ... (Manter os outros ouvintes de Lanterna e Telemetria conforme scripts anteriores)
+// Simplificando para o exemplo:
+onValue(ref(db, 'telemetry/termux_device'), (snap) => {
+    if(snap.val()) document.getElementById('batt-percent').innerText = snap.val().battery + "%";
 });
-
-onValue(ref(db, 'telemetry/termux_device'), (snapshot) => {
-    const data = snapshot.val();
-    if(data) {
-        if(document.getElementById('batt-percent')) document.getElementById('batt-percent').innerText = data.battery + "%";
-        const icon = data.battery_status && data.battery_status.includes('charging') ? '⚡' : '🔋';
-        if(document.getElementById('batt-icon')) document.getElementById('batt-icon').innerText = icon;
-        addLog(`Sincronia: Bateria em ${data.battery}%`);
-    }
-});
+document.getElementById('torch-on').onclick = () => set(ref(db, 'commands/torch'), { active: true, timestamp: Date.now() });
+document.getElementById('torch-off').onclick = () => set(ref(db, 'commands/torch'), { active: false, timestamp: Date.now() });
