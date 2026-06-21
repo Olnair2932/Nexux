@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD_hwtIHSKdcoNMAYLxIUI80TCzfJItHpY",
@@ -13,42 +13,34 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const logArea = document.getElementById('console');
 
-function addLog(msg) {
-    const div = document.createElement('div');
-    div.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
-    logArea.prepend(div);
-}
+// FUNÇÃO DE TRANSMISSÃO DE VOZ
+document.getElementById('send-voice').onclick = () => {
+    const text = document.getElementById('voice-input').value;
+    if(text) {
+        set(ref(db, 'commands/speech'), {
+            message: text,
+            timestamp: Date.now()
+        });
+        document.getElementById('voice-input').value = "";
+        alert("Comando de voz enviado para o Termux!");
+    }
+};
 
-// ESCUTA NÓ CLOUD (RENDER)
 onValue(ref(db, 'telemetry/current'), (snapshot) => {
     const data = snapshot.val();
     if(data) {
         document.getElementById('status-text').innerText = data.status;
         document.getElementById('uptime-text').innerText = Math.floor(data.uptime) + "s";
-        document.getElementById('load-text').innerText = data.load;
-        document.getElementById('load-bar').style.width = (data.load * 100) + "%";
-        addLog("Nuvem: Pulso recebido");
     }
 });
 
-// ESCUTA NÓ MOBILE (TERMUX)
 onValue(ref(db, 'telemetry/termux_device'), (snapshot) => {
     const data = snapshot.val();
     if(data) {
         document.getElementById('batt-percent').innerText = data.battery + "%";
         document.getElementById('batt-status').innerText = "Status: " + data.battery_status;
-        document.getElementById('ram-text').innerText = data.free_ram;
-        
-        // Ícone dinâmico
         const icon = data.battery_status.includes('charging') ? '⚡' : '🔋';
         document.getElementById('batt-icon').innerText = icon;
-        
-        // RAM Bar (Baseada em 4GB - Ajustável)
-        const ramPercent = Math.min(100, (data.free_ram / 4000) * 100);
-        document.getElementById('ram-bar').style.width = ramPercent + "%";
-        
-        addLog(`Mobile: Bateria em ${data.battery}% | RAM: ${data.free_ram}MB`);
     }
 });

@@ -19,8 +19,6 @@
                 <div class="card-header">NÓ DE PRODUÇÃO (RENDER)</div>
                 <div class="value" id="status-text">--</div>
                 <p>Uptime: <span id="uptime-text">--</span></p>
-                <p>Carga: <span id="load-text">--</span></p>
-                <div class="bar-container"><div id="load-bar" class="fill"></div></div>
             </div>
 
             <!-- NÓ MOBILE: TERMUX -->
@@ -30,16 +28,19 @@
                     <span id="batt-icon" style="font-size: 3rem;">🔋</span>
                     <div class="value" id="batt-percent">--%</div>
                 </div>
-                <p id="batt-status">Aguardando sinal...</p>
-                <p>RAM Livre: <span id="ram-text">--</span> MB</p>
-                <div class="bar-container"><div id="ram-bar" class="fill" style="background: #0088ff;"></div></div>
+                <p id="batt-status">Sincronizando...</p>
+            </div>
+
+            <!-- NOVO MÓDULO: COMANDO DE VOZ -->
+            <div class="card voice">
+                <div class="card-header">TRANSMISSÃO DE VOZ (TTS)</div>
+                <input type="text" id="voice-input" placeholder="Digite a mensagem para o Termux..." style="width: 100%; padding: 10px; background: #000; border: 1px solid var(--primary); color: var(--primary); margin-top: 10px;">
+                <button id="send-voice" style="width: 100%; margin-top: 10px; padding: 10px; background: var(--primary); color: #000; font-weight: bold; cursor: pointer; border: none;">TRANSMITIR VOZ</button>
             </div>
         </main>
 
         <section class="console-wrapper">
-            <div id="console" class="log-area">
-                [SYSTEM] Dashboard Híbrido v3.5 Inicializado...
-            </div>
+            <div id="console" class="log-area"></div>
         </section>
     </div>
     <script type="module" src="script.js"></script>
