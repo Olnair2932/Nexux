@@ -11,22 +11,27 @@ const firebaseConfig = {
   appId: "1:772343160595:web:06113b8858b39be1f5c4e6"
 };
 
-// Inicialização
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const statusRef = ref(db, 'telemetry/current');
 
 const logArea = document.getElementById('console');
 
-function addLog(message) {
+function addLog(message, type = "info") {
     const time = new Date().toLocaleTimeString();
+    const color = type === "system" ? "#00ff41" : "#888";
     const entry = document.createElement('div');
-    entry.innerHTML = `<span style="color: #666">[${time}]</span> ${message}`;
+    entry.innerHTML = `<span style="color: ${color}">[${time}] ${message}</span>`;
     logArea.prepend(entry);
-    if(logArea.childNodes.length > 50) logArea.removeChild(logArea.lastChild);
 }
 
-// Escuta em tempo real (Sem Refresh)
+// Mensagem de Boas-Vindas do SRE
+window.onload = () => {
+    addLog("=== SISTEMA NEXUS ATIVADO ===", "system");
+    addLog("OPERADOR IDENTIFICADO: Olnair2932", "system");
+    addLog("STATUS: Aguardando telemetria do Render...", "info");
+};
+
 onValue(statusRef, (snapshot) => {
     const data = snapshot.val();
     if (data) {
@@ -35,13 +40,10 @@ onValue(statusRef, (snapshot) => {
         document.getElementById('load-text').innerText = data.load;
         document.getElementById('load-bar').style.width = (data.load * 100) + "%";
         
-        // Update Badge
         const badge = document.getElementById('status-badge');
-        badge.innerText = "DATA SYNC ACTIVE";
+        badge.innerText = "LINK ESTABELECIDO";
         badge.style.background = "#00441b";
         
-        addLog(`Heartbeat recebido: Load ${data.load} | Uptime ${Math.floor(data.uptime)}s`);
+        addLog(`PULSO RECEBIDO: Latência nominal | Carga: ${data.load}`, "info");
     }
-}, (error) => {
-    addLog(`ERRO DE CONEXÃO: ${error.message}`);
 });
