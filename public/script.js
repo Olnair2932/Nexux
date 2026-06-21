@@ -13,37 +13,42 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const statusRef = ref(db, 'telemetry/current');
-
 const logArea = document.getElementById('console');
 
-function addLog(message, type = "info") {
-    const time = new Date().toLocaleTimeString();
-    const color = type === "system" ? "#00ff41" : "#888";
-    const entry = document.createElement('div');
-    entry.innerHTML = `<span style="color: ${color}">[${time}] ${message}</span>`;
-    logArea.prepend(entry);
+function addLog(msg) {
+    const div = document.createElement('div');
+    div.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    logArea.prepend(div);
 }
 
-// Mensagem de Boas-Vindas do SRE
-window.onload = () => {
-    addLog("=== SISTEMA NEXUS ATIVADO ===", "system");
-    addLog("OPERADOR IDENTIFICADO: Olnair2932", "system");
-    addLog("STATUS: Aguardando telemetria do Render...", "info");
-};
-
-onValue(statusRef, (snapshot) => {
+// ESCUTA NÓ CLOUD (RENDER)
+onValue(ref(db, 'telemetry/current'), (snapshot) => {
     const data = snapshot.val();
-    if (data) {
+    if(data) {
         document.getElementById('status-text').innerText = data.status;
         document.getElementById('uptime-text').innerText = Math.floor(data.uptime) + "s";
         document.getElementById('load-text').innerText = data.load;
         document.getElementById('load-bar').style.width = (data.load * 100) + "%";
+        addLog("Nuvem: Pulso recebido");
+    }
+});
+
+// ESCUTA NÓ MOBILE (TERMUX)
+onValue(ref(db, 'telemetry/termux_device'), (snapshot) => {
+    const data = snapshot.val();
+    if(data) {
+        document.getElementById('batt-percent').innerText = data.battery + "%";
+        document.getElementById('batt-status').innerText = "Status: " + data.battery_status;
+        document.getElementById('ram-text').innerText = data.free_ram;
         
-        const badge = document.getElementById('status-badge');
-        badge.innerText = "LINK ESTABELECIDO";
-        badge.style.background = "#00441b";
+        // Ícone dinâmico
+        const icon = data.battery_status.includes('charging') ? '⚡' : '🔋';
+        document.getElementById('batt-icon').innerText = icon;
         
-        addLog(`PULSO RECEBIDO: Latência nominal | Carga: ${data.load}`, "info");
+        // RAM Bar (Baseada em 4GB - Ajustável)
+        const ramPercent = Math.min(100, (data.free_ram / 4000) * 100);
+        document.getElementById('ram-bar').style.width = ramPercent + "%";
+        
+        addLog(`Mobile: Bateria em ${data.battery}% | RAM: ${data.free_ram}MB`);
     }
 });

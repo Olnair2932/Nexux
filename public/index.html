@@ -3,46 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS - SRE DASHBOARD</title>
+    <title>NEXUS - DASHBOARD SRE</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="logo">
-                <h1>NEXUS <span class="blink">_</span></h1>
-                <p>SENTINELA MONITORING SYSTEM v3.5</p>
-            </div>
-            <div id="status-badge" class="badge">CONECTANDO AO NODE...</div>
+            <h1>NEXUS SRE <span class="blink">_</span></h1>
+            <div id="global-status" class="badge">SISTEMA ATIVO</div>
         </header>
 
         <main class="grid">
-            <div class="card">
-                <h3>SERVER STATUS</h3>
-                <div class="value" id="status-text">WAITING</div>
+            <!-- NÓ CLOUD: RENDER -->
+            <div class="card cloud">
+                <div class="card-header">NÓ DE PRODUÇÃO (RENDER)</div>
+                <div class="value" id="status-text">--</div>
+                <p>Uptime: <span id="uptime-text">--</span></p>
+                <p>Carga: <span id="load-text">--</span></p>
+                <div class="bar-container"><div id="load-bar" class="fill"></div></div>
             </div>
-            <div class="card">
-                <h3>UPTIME</h3>
-                <div class="value" id="uptime-text">0s</div>
-            </div>
-            <div class="card">
-                <h3>SYSTEM LOAD</h3>
-                <div class="value" id="load-text">0.00</div>
-                <div class="bar-container">
-                    <div id="load-bar" class="fill" style="width: 0%"></div>
+
+            <!-- NÓ MOBILE: TERMUX -->
+            <div class="card mobile">
+                <div class="card-header">NÓ MÓVEL (TERMUX)</div>
+                <div class="battery-section">
+                    <span id="batt-icon" style="font-size: 3rem;">🔋</span>
+                    <div class="value" id="batt-percent">--%</div>
                 </div>
+                <p id="batt-status">Aguardando sinal...</p>
+                <p>RAM Livre: <span id="ram-text">--</span> MB</p>
+                <div class="bar-container"><div id="ram-bar" class="fill" style="background: #0088ff;"></div></div>
             </div>
         </main>
 
         <section class="console-wrapper">
-            <div class="console-header">LIVE TELEMETRY LOGS</div>
             <div id="console" class="log-area">
-                [SYSTEM] Iniciando interceptação de pacotes de dados...
+                [SYSTEM] Dashboard Híbrido v3.5 Inicializado...
             </div>
         </section>
     </div>
-
-    <!-- Firebase SDK Modules -->
     <script type="module" src="script.js"></script>
 </body>
 </html>
