@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// Configuração Nexus-e6ef2
 const firebaseConfig = {
   apiKey: "AIzaSyD_hwtIHSKdcoNMAYLxIUI80TCzfJItHpY",
   authDomain: "nexus-e6ef2.firebaseapp.com",
@@ -12,71 +11,44 @@ const firebaseConfig = {
   appId: "1:772343160595:web:06113b8858b39be1f5c4e6"
 };
 
-// Inicialização
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const logArea = document.getElementById('console');
 
-// Função auxiliar para logs no Dashboard
 function addLog(msg) {
+    if(!logArea) return;
     const div = document.createElement('div');
     div.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
     logArea.prepend(div);
-    if(logArea.childNodes.length > 30) logArea.removeChild(logArea.lastChild);
 }
 
-// --- COMANDOS (ESCRITA NO FIREBASE) ---
+// GATILHOS DE COMANDO
+const btnOn = document.getElementById('torch-on');
+const btnOff = document.getElementById('torch-off');
+const btnVoice = document.getElementById('send-voice');
 
-// 1. Comando de Voz
-document.getElementById('send-voice').onclick = () => {
-    const text = document.getElementById('voice-input').value;
-    if(text) {
-        set(ref(db, 'commands/speech'), {
-            message: text,
-            timestamp: Date.now()
-        });
-        document.getElementById('voice-input').value = "";
-        addLog(`Voz enviada: "${text}"`);
-    }
+if(btnOn) btnOn.onclick = () => set(ref(db, 'commands/torch'), { active: true, timestamp: Date.now() });
+if(btnOff) btnOff.onclick = () => set(ref(db, 'commands/torch'), { active: false, timestamp: Date.now() });
+if(btnVoice) btnVoice.onclick = () => {
+    const txt = document.getElementById('voice-input').value;
+    if(txt) set(ref(db, 'commands/speech'), { message: txt, timestamp: Date.now() });
 };
 
-// 2. Comando da Lanterna (Ligar)
-document.getElementById('torch-on').onclick = () => {
-    set(ref(db, 'commands/torch'), {
-        active: true,
-        timestamp: Date.now()
-    });
-    addLog("Hardware: Solicitado Ligar Lanterna");
-};
-
-// 3. Comando da Lanterna (Desligar)
-document.getElementById('torch-off').onclick = () => {
-    set(ref(db, 'commands/torch'), {
-        active: false,
-        timestamp: Date.now()
-    });
-    addLog("Hardware: Solicitado Desligar Lanterna");
-};
-
-// --- TELEMETRIA (LEITURA EM TEMPO REAL) ---
-
-// Monitoramento Nó Cloud (Render)
+// ESCUTADORES DE TELEMETRIA
 onValue(ref(db, 'telemetry/current'), (snapshot) => {
     const data = snapshot.val();
     if(data) {
-        document.getElementById('status-text').innerText = data.status;
-        document.getElementById('uptime-text').innerText = Math.floor(data.uptime) + "s";
-        document.getElementById('status-text').style.color = "#00ff41";
+        if(document.getElementById('status-text')) document.getElementById('status-text').innerText = data.status;
+        if(document.getElementById('uptime-text')) document.getElementById('uptime-text').innerText = Math.floor(data.uptime) + "s";
     }
 });
 
-// Monitoramento Nó Mobile (Termux)
 onValue(ref(db, 'telemetry/termux_device'), (snapshot) => {
     const data = snapshot.val();
     if(data) {
-        document.getElementById('batt-percent').innerText = data.battery + "%";
-        const icon = data.battery_status.includes('charging') ? '⚡' : '🔋';
-        document.getElementById('batt-icon').innerText = icon;
-        addLog(`Telemetria: Celular em ${data.battery}%`);
+        if(document.getElementById('batt-percent')) document.getElementById('batt-percent').innerText = data.battery + "%";
+        const icon = data.battery_status && data.battery_status.includes('charging') ? '⚡' : '🔋';
+        if(document.getElementById('batt-icon')) document.getElementById('batt-icon').innerText = icon;
+        addLog(`Sincronia: Bateria em ${data.battery}%`);
     }
 });
