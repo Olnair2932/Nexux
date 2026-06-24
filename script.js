@@ -1,38 +1,64 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
+// SUAS CONFIGURAÇÕES DO FIREBASE (Coloque aqui seus dados reais)
 const firebaseConfig = {
-  apiKey: "AIzaSyD_hwtIHSKdcoNMAYLxIUI80TCzfJItHpY",
-  authDomain: "nexus-e6ef2.firebaseapp.com",
-  databaseURL: "https://nexus-e6ef2-default-rtdb.firebaseio.com",
-  projectId: "nexus-e6ef2",
-  storageBucket: "nexus-e6ef2.firebasestorage.app",
-  messagingSenderId: "772343160595",
-  appId: "1:772343160595:web:06113b8858b39be1f5c4e6"
+    databaseURL: "SUA_URL_DO_FIREBASE"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// GATILHO DE ARSENAL
-document.getElementById('run-script').onclick = () => {
-    const scriptName = document.getElementById('script-input').value;
-    if(scriptName) {
-        set(ref(db, 'commands/arsenal'), {
-            script: scriptName,
+const logArea = document.getElementById('console');
+function log(msg) {
+    const time = new Date().toLocaleTimeString();
+    logArea.innerHTML += `<div>[${time}] ${msg}</div>`;
+    logArea.scrollTop = logArea.scrollHeight;
+}
+
+// --- COMANDO IA NEXUS (ROSA) ---
+document.getElementById('run-ia').addEventListener('click', () => {
+    const texto = document.getElementById('ia-input').value;
+    if(texto) {
+        push(ref(db, 'nexus/comandos'), {
+            texto: texto,
+            executado: false,
             timestamp: Date.now()
         });
-        document.getElementById('script-input').value = "";
-        const entry = document.createElement('div');
-        entry.innerHTML = `[${new Date().toLocaleTimeString()}] Solicitado script: ${scriptName}`;
-        document.getElementById('console').prepend(entry);
+        log(`IA: Enviando solicitação de catálogo: ${texto}`);
+        document.getElementById('ia-input').value = "";
     }
-};
-
-// ... (Manter os outros ouvintes de Lanterna e Telemetria conforme scripts anteriores)
-// Simplificando para o exemplo:
-onValue(ref(db, 'telemetry/termux_device'), (snap) => {
-    if(snap.val()) document.getElementById('batt-percent').innerText = snap.val().battery + "%";
 });
-document.getElementById('torch-on').onclick = () => set(ref(db, 'commands/torch'), { active: true, timestamp: Date.now() });
-document.getElementById('torch-off').onclick = () => set(ref(db, 'commands/torch'), { active: false, timestamp: Date.now() });
+
+// --- COMANDO ARSENAL (AZUL) ---
+document.getElementById('run-script').addEventListener('click', () => {
+    const script = document.getElementById('script-input').value;
+    if(script) {
+        push(ref(db, 'nexus/scripts'), {
+            arquivo: script,
+            executado: false
+        });
+        log(`ARSENAL: Executando script shell: ${script}`);
+        document.getElementById('script-input').value = "";
+    }
+});
+
+// --- LANTERNA ---
+document.getElementById('torch-on').addEventListener('click', () => {
+    set(ref(db, 'comandos/lanterna'), { status: "on" });
+    log("HARDWARE: Comando lanterna ON enviado.");
+});
+
+document.getElementById('torch-off').addEventListener('click', () => {
+    set(ref(db, 'comandos/lanterna'), { status: "off" });
+    log("HARDWARE: Comando lanterna OFF enviado.");
+});
+
+// OUVIR TELEMETRIA
+onValue(ref(db, 'telemetry/termux_device'), (snapshot) => {
+    const data = snapshot.val();
+    if(data) {
+        document.getElementById('batt-percent').innerText = `${data.battery_level}%`;
+        log(`SINCRO: Telemetria atualizada (${data.battery_level}%)`);
+    }
+});
