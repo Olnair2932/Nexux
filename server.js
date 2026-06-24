@@ -1,16 +1,20 @@
 require('dotenv').config();
 const express = require('express');
 const admin = require('firebase-admin');
-const cors = require('cors');
-const os = require('os');
+const { exec } = require('child_process');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// --- GPS: CONFIGURAÇÃO DE CAMINHOS ABSOLUTOS ---
+const RAIZ_WEB = "/data/data/com.termux/files/home/scripts/web_base";
+const RAIZ_ARSENAL = "/data/data/com.termux/files/home/sentinela_dev/scripts";
+
+app.use(express.static('public'));
 app.use(express.json());
 
-// 1. Inicialização Firebase
+// 1. Inicialização do Firebase
 try {
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -18,49 +22,65 @@ try {
             credential: admin.credential.cert(serviceAccount),
             databaseURL: process.env.FIREBASE_DB_URL
         });
-        console.log("[NEXUS] Firebase Conectado com sucesso.");
+        console.log("[NEXUS-SRE] Firebase Conectado com Sucesso.");
     }
-} catch (e) {
-    console.error("[NEXUS] Erro Firebase:", e.message);
-}
 
-const db = admin.database();
+    const db = admin.database();
 
-// 2. ROTA PRINCIPAL (Resolve o erro 'Cannot GET /')
-app.get('/', (req, res) => {
-    res.send('<h1>NEXUS SRE ENGINE</h1><p>Status: OPERACIONAL</p><p>Acesse o Dashboard no GitHub Pages.</p>');
-});
+    // --- OUVINTE 1: NEXUS IA (Módulo Rosa - Atualiza Site) ---
+    db.ref('nexus/comandos').on('child_added', (snapshot) => {
+        const cmd = snapshot.val();
+        if (cmd && cmd.executado === false) {
+            console.log(`[IA-SITE] Recebido: ${cmd.texto}`);
 
-// 3. Endpoint de Telemetria Termux (Seguro)
-app.post('/api/telemetry/termux', async (req, res) => {
-    const apiKey = req.headers['x-api-key'];
-    if (apiKey === process.env.NEXUS_API_KEY) {
-        if (admin.apps.length) {
-            await db.ref('telemetry/termux_device').set({
-                ...req.body,
-                last_seen: admin.database.ServerValue.TIMESTAMP
+            // Executa nexus.sh dentro da pasta web_base
+            exec(`./nexus.sh "${cmd.texto}"`, { cwd: RAIZ_WEB }, (err, stdout, stderr) => {
+                if (err) {
+                    console.error(`[IA-ERRO] ${err.message}`);
+                    return;
+                }
+                console.log(`[IA-OK] ${stdout}`);
+                snapshot.ref.update({ 
+                    executado: true, 
+                    processado_em: new Date().toISOString() 
+                });
             });
         }
-        res.json({ status: "SECURE_RECEIVED" });
-    } else {
-        res.status(403).json({ error: "ACESSO NEGADO" });
-    }
-});
+    });
 
-// 4. Endpoint de Saúde do Sistema
-app.get('/api/health', async (req, res) => {
-    const metrics = {
-        status: "ONLINE",
-        uptime: process.uptime(),
-        load: (os.loadavg()[0] / os.cpus().length).toFixed(2),
-        timestamp: admin.database.ServerValue.TIMESTAMP
-    };
-    if (admin.apps.length) {
-        await db.ref('telemetry/current').set(metrics);
-    }
-    res.json(metrics);
+    // --- OUVINTE 2: ARSENAL (Módulo Azul - Executa Scripts Shell) ---
+    db.ref('nexus/scripts').on('child_added', (snapshot) => {
+        const cmd = snapshot.val();
+        if (cmd && cmd.executado === false) {
+            const scriptName = cmd.arquivo || cmd.texto;
+            console.log(`[ARSENAL] Executando: ${scriptName}`);
+
+            // Executa scripts dentro da pasta sentinela_dev/scripts
+            exec(`./${scriptName}`, { cwd: RAIZ_ARSENAL }, (err, stdout, stderr) => {
+                if (err) {
+                    console.error(`[ARSENAL-ERRO] ${err.message}`);
+                    return;
+                }
+                console.log(`[ARSENAL-OK] ${stdout}`);
+                snapshot.ref.update({ 
+                    executado: true, 
+                    processado_em: new Date().toISOString() 
+                });
+            });
+        }
+    });
+
+} catch (e) {
+    console.error("[NEXUS-FATAL] Erro ao iniciar motor:", e.message);
+}
+
+// Rota de Status
+app.get('/status', (req, res) => {
+    res.json({ system: "NEXUS_SRE", status: "ONLINE", timestamp: Date.now() });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[NEXUS] Servidor ativo na porta ${PORT}`);
+    console.log(`[NEXUS-SRE] Engine ativa na porta ${PORT}`);
+    console.log(`[GPS] Web Base: ${RAIZ_WEB}`);
+    console.log(`[GPS] Arsenal: ${RAIZ_ARSENAL}`);
 });

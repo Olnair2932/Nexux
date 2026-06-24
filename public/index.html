@@ -14,6 +14,7 @@
         </header>
 
         <main class="grid">
+            <!-- TELEMETRIA -->
             <div class="card">
                 <div class="card-header">NÓ DE PRODUÇÃO (RENDER)</div>
                 <div class="value" id="status-text">--</div>
@@ -24,24 +25,32 @@
                 <div class="value" id="batt-percent">--%</div>
             </div>
 
-            <!-- NOVO MÓDULO: EXECUTOR DE ARSENAL -->
+            <!-- NEXUS IA GENERATIVA (O QUE VOCÊ PEDIU) -->
+            <div class="card ia-nexus" style="border-color: #ff1493;">
+                <div class="card-header" style="color: #ff1493;">NEXUS IA - CATALOGADOR</div>
+                <input type="text" id="ia-input" placeholder="Ex: Adicione bolsa azul 120 reais" style="width: 100%; padding: 10px; background: #000; border: 1px solid #ff1493; color: #ff1493; margin-top: 10px; box-sizing: border-box;">
+                <button id="run-ia" style="width: 100%; margin-top: 10px; padding: 10px; background: #ff1493; color: #fff; font-weight: bold; cursor: pointer; border: none;">ATUALIZAR SITE VIA GEMINI</button>
+            </div>
+
+            <!-- EXECUTOR DE ARSENAL -->
             <div class="card arsenal" style="border-color: #0088ff;">
                 <div class="card-header" style="color: #0088ff;">COMANDO DE ARSENAL</div>
                 <input type="text" id="script-input" placeholder="Ex: bateria.sh" style="width: 100%; padding: 10px; background: #000; border: 1px solid #0088ff; color: #0088ff; margin-top: 10px; box-sizing: border-box;">
-                <button id="run-script" style="width: 100%; margin-top: 10px; padding: 10px; background: #0088ff; color: #fff; font-weight: bold; cursor: pointer; border: none;">EXECUTAR NO TERMUX</button>
+                <button id="run-script" style="width: 100%; margin-top: 10px; padding: 10px; background: #0088ff; color: #fff; font-weight: bold; cursor: pointer; border: none;">EXECUTAR SCRIPT .SH</button>
             </div>
 
             <div class="card">
                 <div class="card-header">LANTERNA REMOTA</div>
                 <div style="display: flex; gap: 10px;">
-                    <button id="torch-on" style="flex: 1; padding: 10px; background: #ffcc00; border: none;">LIGAR</button>
-                    <button id="torch-off" style="flex: 1; padding: 10px; background: #333; color: #fff; border: none;">DESLIGAR</button>
+                    <button id="torch-on" style="flex: 1; padding: 10px; background: #ffcc00; border: none; cursor:pointer;">LIGAR</button>
+                    <button id="torch-off" style="flex: 1; padding: 10px; background: #333; color: #fff; border: none; cursor:pointer;">DESLIGAR</button>
                 </div>
             </div>
         </main>
 
         <div id="console" class="log-area"></div>
     </div>
+    <!-- Script modificado para Firebase -->
     <script type="module" src="script.js"></script>
 </body>
 </html>

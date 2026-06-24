@@ -1,0 +1,4 @@
+body { font-family: sans-serif; background: #0b0b0b; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+.card { border: 2px solid #ff4400; padding: 40px; border-radius: 15px; text-align: center; background: #1c1c1c; }
+.price { font-size: 32px; color: #ff4400; margin: 20px 0; }
+button { padding: 15px 30px; background: #ff4400; border: none; color: white; font-weight: bold; cursor: pointer; }
