@@ -4,36 +4,40 @@
 REPO_URL="https://github.com/Olnair2932/Nexux"
 DIR="/data/data/com.termux/files/home/sentinela_dev"
 
-cd "$DIR" || exit
+cd "$DIR" || { echo "❌ Pasta não encontrada"; exit 1; }
 
-# 1. Inicializa o Git se não houver
-if [ ! -d ".git" ]; then
-    echo "📦 Inicializando Git..."
-    git init
-    git remote add origin "$REPO_URL"
-    git branch -M main
-else
-    echo "✅ Git já inicializado."
-    # Garante que o remote está correto
-    git remote set-url origin "$REPO_URL"
+# 1. Garantir que o package.json existe (Necessário para o Render)
+if [ ! -f "package.json" ]; then
+    echo "📦 Criando package.json básico para o Render..."
+    npm init -y
+    sed -i 's/"test": ".*"/"start": "node server.js"/' package.json
 fi
 
-# 2. Criar .gitignore para segurança (Não enviar chaves privadas)
+# 2. Configurar .gitignore (Segurança total)
 cat << 'GIGNORE' > .gitignore
 node_modules/
 .env
 service-account.json
 *.log
+push_nexus.sh
 GIGNORE
 
-# 3. Adicionar arquivos e realizar Commit
-echo "📝 Adicionando arquivos..."
-git add .
-git commit -m "Nexus SRE Engine: Dashboard, IA Integration and Arsenal [Termux Push]"
+# 3. Preparar Git
+if [ ! -d ".git" ]; then
+    git init
+    git remote add origin "$REPO_URL"
+    git branch -M main
+else
+    git remote set-url origin "$REPO_URL"
+fi
 
-# 4. Enviar para o GitHub
-echo "🚀 Enviando para o GitHub..."
-# O Git solicitará seu Username e o Token (como senha)
+# 4. Commit e Push
+echo "📝 Comitando alterações..."
+git add .
+git commit -m "Update SRE Engine: Dashboard Sync & Render Config [$(date +'%Y-%m-%d %H:%M')]"
+
+echo "🚀 Subindo para o GitHub..."
+# Note: Pode pedir seu Username e Token novamente
 git push -u origin main --force
 
-echo "✨ Sincronização concluída com o repositório Nexux!"
+echo "✨ Sincronização Concluída!"
