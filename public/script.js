@@ -22,7 +22,7 @@ function log(msg, type = 'info') {
 onValue(ref(db, 'telemetry/termux_device'), (snapshot) => {
     const data = snapshot.val();
     if(data) {
-        battText.innerText = `${data.battery_level}%`;
+        battText.innerText = data.battery_level ? `${data.battery_level}%` : "--%";
         statusText.innerText = "ONLINE";
         statusText.style.color = "#00ff00";
     }
